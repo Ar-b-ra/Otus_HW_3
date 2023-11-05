@@ -15,6 +15,7 @@ class Resolver:
             command = self.fifo_queue.get()
         except Exception as exc:
             pass
+
     @staticmethod
     def put_to_log(exc: Exception, message: str):
         root_logger.critical(f"[{exc}]: {message}")
