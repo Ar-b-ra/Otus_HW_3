@@ -1,21 +1,10 @@
-from queue import PriorityQueue
-from typing import Callable
-
-from custom_logger import root_logger
+from queue_resolver import QueueWorker
 
 
-class Resolver:
-    fifo_queue = PriorityQueue()
+if __name__ == "__main__":
+    def exception_command():
+        raise Exception("Raised exception")
 
-    def add_command(self, command: Callable):
-        self.fifo_queue.put(command)
-
-    def execute(self):
-        try:
-            command = self.fifo_queue.get()
-        except Exception as exc:
-            pass
-
-    @staticmethod
-    def put_to_log(exc: Exception, message: str):
-        root_logger.critical(f"[{exc}]: {message}")
+    queue_worker = QueueWorker()
+    queue_worker.add_command(exception_command)
+    queue_worker.execute()
