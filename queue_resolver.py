@@ -1,38 +1,39 @@
-from queue import PriorityQueue
+from queue import Queue
 from typing import Callable
 
 from custom_logger import root_logger
 
 
-def resolve(exc: Exception):
-    ExceptionHandler.resolve(exc)
-
-
-class QueueWorker:
-    fifo_queue = PriorityQueue()
-
-    def add_command(self, command: Callable):
-        self.fifo_queue.put(command)
-
-    def execute(self):
-        try:
-            if self.fifo_queue.empty():
-                return
-            command = self.fifo_queue.get()
-            command()
-        except Exception as exc:
-            ExceptionHandler().resolve(exc)
-
-    def put_command(self, command: Callable):
-        self.fifo_queue.put(command)
+def log_exception(exc):
+    # Записывает информацию о выброшенном исключении в лог
+    root_logger.exception(f"[{type(exc)}]: {exc}")
 
 
 class ExceptionHandler:
-    @staticmethod
-    def put_exc_to_log(exc: Exception):
-        root_logger.exception(f"[{type(exc)}]: {exc}")
+    def __init__(self, working_queue: Queue = None):
+        self.working_queue = working_queue
+        self.unresolved_commands = dict()
 
-    def resolve(self, exc: Exception):
-        self.put_exc_to_log(exc)
+    def put_exc_to_log(self, exc):
+        # Кладёт в очередь запись ошибки команды в лог
+        self.working_queue.put(lambda: log_exception(exc))
+
+    def resolve_execution(self, command: Callable):
+        # Отправляет команду на выполнение после первой неудачной попытки
+        root_logger.info(f"Resolving command: {command.__name__}")
+        try:
+            command()
+        except Exception as exc:
+            self.put_exc_to_log(exc)
+            self.working_queue.put(lambda: self.try_again_command(command))
+
+    def try_again_command(self, command: Callable):
+        try:
+            command()
+        except Exception as _:
+            try:
+                command()
+            except Exception as exc:
+                self.put_exc_to_log(exc)
 
 
