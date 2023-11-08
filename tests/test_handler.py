@@ -2,7 +2,7 @@ import unittest
 from queue import Queue
 
 from custom_logger import root_logger
-from queue_resolver import ExceptionHandler
+from exception_handler import ExceptionHandler
 
 
 class ExceptionHandlerTest(unittest.TestCase):
@@ -19,10 +19,10 @@ class ExceptionHandlerTest(unittest.TestCase):
         command = self.testing_queue.get()
         try:
             command()
-        except Exception as exc:
+        except Exception as _:
             self.handler.resolve_execution(command)
 
-        self.assertEqual(self.testing_queue.empty(), False)
+        self.assertFalse(self.testing_queue.empty())
         log_exception = self.testing_queue.get()
         with self.assertLogs(root_logger, level='INFO') as cm:
             log_exception()
@@ -30,6 +30,19 @@ class ExceptionHandlerTest(unittest.TestCase):
 
         # Assert that the log message was written to the console correctly
         # You can use a library like `pytest` for more advanced assertions
+
+    def test_resolve_execution(self):
+        def exception_command():
+            raise Exception("Raised exception")
+
+        with self.assertLogs(root_logger, level='INFO') as cm:
+            self.handler.resolve_execution(exception_command)
+            self.assertEqual(cm.records[0].getMessage(), "Resolving command: exception_command")
+            log_command = self.testing_queue.get()
+            log_command()
+            self.assertEqual(cm.records[1].getMessage(), "[<class 'Exception'>]: Raised exception")
+            self.assertEqual(len(cm.records), 2)
+            self.assertFalse(self.testing_queue.empty())
 
 
 if __name__ == '__main__':
