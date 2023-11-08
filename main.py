@@ -1,6 +1,6 @@
 from queue import PriorityQueue
 
-from queue_resolver import ExceptionHandler
+from exception_handler import ExceptionHandler
 
 if __name__ == "__main__":
     def exception_command():
