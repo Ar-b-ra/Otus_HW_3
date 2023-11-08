@@ -1,12 +1,6 @@
 import logging
 from pathlib import Path
 
-
-class ConsoleFormatter(logging.Formatter):
-    def __init__(self):
-        super().__init__()
-
-
 root_logger = logging.getLogger()
 
 format_string = "%(asctime)s | %(levelname)s | %(module)s | %(funcName)s | %(message)s"
@@ -23,4 +17,4 @@ root_logger.addHandler(consoleHandler)
 root_logger.setLevel("DEBUG")
 
 if __name__ == "__main__":
-    root_logger.info("dasdsad")
+    root_logger.exception(Exception("exception"))
